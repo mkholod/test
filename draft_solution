@@ -1,0 +1,72 @@
+import click
+import sys
+import sqlite3
+
+# @click.group()
+# def cli():
+#     pass
+
+@click.command()
+@click.option('--setvalue', nargs=2, type=str) # TODO change to set-value
+def set_value(setvalue):
+    store = Storage()
+    store.set_value(setvalue[0], setvalue[1])
+    click.echo('Setting key:%s value:%s' % setvalue)
+
+@click.command()
+@click.option('--getvalue', nargs=1, type=str) # TODO change to get-value
+def get_value(getvalue):
+    store = Storage()
+    key = getvalue[0]
+    value = store.get_value(key)
+    click.echo('value:%s' % value)
+
+@click.command()
+@click.option('--deletevalue', nargs=1, type=str) # TODO change to delete-value
+def delete_value(deletevalue):
+    store = Storage()
+    store.delete_value(deletevalue[0])
+    # click.echo('Deleting key:%s' % result)
+
+class Storage:
+    def __init__(self):
+        self._con = sqlite3.connect('infini.db')
+        self._cur = self._con.cursor()
+        self._cur.execute('''CREATE TABLE if not exists storage(key text, value text)''')
+
+    def set_value(self, key, value):
+        with sqlite3.connect('infini.db') as con:
+            with con as cur:
+                cur.execute("INSERT INTO storage VALUES ({}, {})".format(key, value))
+
+
+    def get_value(self, key):
+        result = "None"
+        with sqlite3.connect('infini.db') as con:
+            with con as cur:
+                for row in self._cur.execute("SELECT value FROM storage where key={}".format(key)):
+                    result = row[0]
+        return result
+
+
+    def delete_value(self, key):
+        with sqlite3.connect('infini.db') as con:
+            with con as cur:
+               cur.execute("DELETE FROM storage where key={}".format(key))
+
+
+if __name__ == '__main__':
+    # sys.argv = [sys.argv[0], '--setvalue', '1', '2']
+    # set_value()
+
+    # sys.argv = [sys.argv[0], '--getvalue', '1']
+    # get_value()
+
+    # cli()
+
+    if sys.argv[1] == '--setvalue':
+        set_value()
+    elif sys.argv[1] == '--getvalue':
+        get_value()
+    elif sys.argv[1] == '--deletevalue':
+        delete_value()
